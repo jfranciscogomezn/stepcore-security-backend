@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15:///gmm_devengos_test?TC_REUSABLE=true
+    username: test
+    password: test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+jwt:
+  secret: test-secret-key-for-unit-tests-only-not-for-production-use
+  expiration-ms: 3600000
+
+logging:
+  level:
+    com.gmm.devengos: DEBUG
+    org.springframework.security: WARN
