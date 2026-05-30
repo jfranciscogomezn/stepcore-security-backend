@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -24,6 +25,7 @@ public class JwtService {
     public static final String CLAIM_TENANT_ID = "tenant_id";
     public static final String CLAIM_TENANT_SLUG = "tenant_slug";
     public static final String CLAIM_TENANT_PLAN = "tenant_plan";
+    public static final String CLAIM_ROLES = "roles";
 
     private final JwtProperties jwtProperties;
 
@@ -49,6 +51,18 @@ public class JwtService {
     public Long extractTenantId(final String token) {
         final String raw = extractClaim(token, claims -> claims.get(CLAIM_TENANT_ID, String.class));
         return raw == null ? null : Long.valueOf(raw);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(final String token) {
+        final Object raw = extractClaim(token, claims -> claims.get(CLAIM_ROLES));
+        if (raw == null) {
+            return List.of();
+        }
+        if (raw instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
+        }
+        return List.of(String.valueOf(raw));
     }
 
     public boolean isTokenValid(final String token, final UserDetails userDetails) {
