@@ -49,7 +49,7 @@ class RoleControllerIT extends BaseIntegrationTest {
         final String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new LoginRequest("role_it_admin@example.com", "Admin@1234!"))))
+                                new LoginRequest("legacy", "role_it_admin@example.com", "Admin@1234!"))))
                 .andReturn().getResponse().getContentAsString();
 
         adminToken = objectMapper.readTree(loginResponse).at("/data/token").asText();
@@ -98,7 +98,7 @@ class RoleControllerIT extends BaseIntegrationTest {
         final String empLoginResponse = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new LoginRequest("emp_it@example.com", "Admin@1234!"))))
+                                new LoginRequest("legacy", "emp_it@example.com", "Admin@1234!"))))
                 .andReturn().getResponse().getContentAsString();
 
         final String empToken = objectMapper.readTree(empLoginResponse).at("/data/token").asText();

@@ -7,6 +7,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -72,5 +74,23 @@ class JwtServiceTest {
     void shouldThrowWhenTokenIsMalformed() {
         assertThatThrownBy(() -> jwtService.extractEmail("not.a.valid.token"))
                 .isInstanceOf(Exception.class);
+    }
+
+    @Test
+    void shouldEmbedAndExtractTenantClaims() {
+        final UUID tenantId = UUID.randomUUID();
+        final String token = jwtService.generateToken(userDetails, Map.of(
+                JwtService.CLAIM_TENANT_ID, tenantId.toString(),
+                JwtService.CLAIM_TENANT_SLUG, "acme",
+                JwtService.CLAIM_TENANT_PLAN, "PREMIUM"));
+
+        assertThat(jwtService.extractTenantId(token)).isEqualTo(tenantId);
+        assertThat(jwtService.extractEmail(token)).isEqualTo("test@example.com");
+    }
+
+    @Test
+    void shouldReturnNullTenantIdWhenClaimMissing() {
+        final String token = jwtService.generateToken(userDetails);
+        assertThat(jwtService.extractTenantId(token)).isNull();
     }
 }

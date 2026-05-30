@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
 
 import com.stepcore.security.tenant.TenantContext;
 
@@ -29,6 +30,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "roles")
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @Getter
 @Builder(setterPrefix = "with")
 @NoArgsConstructor

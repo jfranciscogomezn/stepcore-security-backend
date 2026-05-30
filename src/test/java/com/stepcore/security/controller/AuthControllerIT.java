@@ -49,7 +49,7 @@ class AuthControllerIT extends BaseIntegrationTest {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new LoginRequest(TEST_EMAIL, TEST_PASSWORD))))
+                                new LoginRequest("legacy", TEST_EMAIL, TEST_PASSWORD))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.token").isNotEmpty())
@@ -61,7 +61,7 @@ class AuthControllerIT extends BaseIntegrationTest {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new LoginRequest(TEST_EMAIL, "wrongPassword"))))
+                                new LoginRequest("legacy", TEST_EMAIL, "wrongPassword"))))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -84,7 +84,7 @@ class AuthControllerIT extends BaseIntegrationTest {
         final String response = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new LoginRequest(TEST_EMAIL, TEST_PASSWORD))))
+                                new LoginRequest("legacy", TEST_EMAIL, TEST_PASSWORD))))
                 .andReturn().getResponse().getContentAsString();
 
         final String token = objectMapper.readTree(response).at("/data/token").asText();

@@ -14,7 +14,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.stepcore.security.tenant.TenantContext;
+
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -47,6 +50,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String email = jwtService.extractEmail(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Establish tenant scope from the signed token before loading the user,
+                // so the tenant-aware lookup resolves within the correct tenant.
+                final UUID tenantId = jwtService.extractTenantId(token);
+                if (tenantId != null) {
+                    TenantContext.setTenantId(tenantId);
+                }
+
                 final UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 if (jwtService.isTokenValid(token, userDetails)) {
@@ -60,6 +70,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.warn("[JwtAuthenticationFilter] - FILTER: token processing failed: {}", e.getMessage());
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
+        }
     }
 }

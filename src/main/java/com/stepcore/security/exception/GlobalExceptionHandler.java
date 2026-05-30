@@ -34,6 +34,13 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied", request);
     }
 
+    @ExceptionHandler(TenantSuspendedException.class)
+    public ResponseEntity<ErrorResponse> handleTenantSuspended(
+            final TenantSuspendedException ex, final HttpServletRequest request) {
+        log.warn("[GlobalExceptionHandler] - TENANT_SUSPENDED: {}", ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
     @ExceptionHandler({UserNotFoundException.class, RoleNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(
             final RuntimeException ex, final HttpServletRequest request) {

@@ -7,23 +7,27 @@ import com.stepcore.security.controller.dto.role.MenuOptionResponse;
 import com.stepcore.security.controller.dto.user.UserResponse;
 import com.stepcore.security.controller.mapper.RoleMapper;
 import com.stepcore.security.controller.mapper.UserMapper;
+import com.stepcore.security.domain.model.Tenant;
 import com.stepcore.security.domain.model.User;
 import com.stepcore.security.exception.InvalidPasswordException;
+import com.stepcore.security.exception.TenantSuspendedException;
 import com.stepcore.security.exception.UserNotFoundException;
+import com.stepcore.security.repository.TenantRepository;
 import com.stepcore.security.repository.UserRepository;
 import com.stepcore.security.security.JwtService;
+import com.stepcore.security.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -31,35 +35,64 @@ import java.util.List;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final AuthenticationManager authenticationManager;
+    private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final RoleMapper roleMapper;
     private final UserMapper userMapper;
-    private final UserDetailsService userDetailsService;
 
     @Override
     public LoginResponse login(final LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        // Resolve the tenant from the supplied slug. Unknown tenant is reported as
+        // a credentials failure to avoid tenant enumeration.
+        final Tenant tenant = tenantRepository.findBySlug(request.tenantSlug())
+                .orElseThrow(() -> new BadCredentialsException("Invalid tenant or credentials"));
 
-        final User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new UserNotFoundException(request.email()));
+        if (!tenant.isActive()) {
+            throw new TenantSuspendedException(tenant.getSlug());
+        }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.email());
-        final String token = jwtService.generateToken(userDetails);
+        // Scope all subsequent queries to the resolved tenant; clear afterwards so the
+        // thread does not leak tenant state back into the pool (login has no JWT yet).
+        try {
+            TenantContext.setTenantId(tenant.getId());
 
-        final List<MenuOptionResponse> menuOptions = user.getRole().getMenuOptions().stream()
-                .sorted(Comparator.comparingInt(opt -> opt.getSortOrder()))
-                .map(roleMapper::toMenuOptionResponse)
-                .toList();
+            final User user = userRepository.findByEmail(request.email())
+                    .orElseThrow(() -> new BadCredentialsException("Invalid tenant or credentials"));
 
-        log.info("[AuthServiceImpl] - LOGIN: user={} role={}", user.getEmail(), user.getRole().getName());
+            if (!user.isEnabled() || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+                throw new BadCredentialsException("Invalid tenant or credentials");
+            }
 
-        return new LoginResponse(token, user.getEmail(), user.getFullName(),
-                user.getRole().getName(), menuOptions, user.isMustChangePassword());
+            final UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                    .username(user.getEmail())
+                    .password(user.getPasswordHash())
+                    .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
+                    .build();
+
+            final Map<String, Object> tenantClaims = Map.of(
+                    JwtService.CLAIM_TENANT_ID, tenant.getId().toString(),
+                    JwtService.CLAIM_TENANT_SLUG, tenant.getSlug(),
+                    JwtService.CLAIM_TENANT_PLAN, tenant.getPlan().name());
+
+            final String token = jwtService.generateToken(userDetails, tenantClaims);
+
+            final List<MenuOptionResponse> menuOptions = user.getRole().getMenuOptions().stream()
+                    .sorted(Comparator.comparingInt(opt -> opt.getSortOrder()))
+                    .map(roleMapper::toMenuOptionResponse)
+                    .toList();
+
+            log.info("[AuthServiceImpl] - LOGIN: tenant={} user={} role={}",
+                    tenant.getSlug(), user.getEmail(), user.getRole().getName());
+
+            return new LoginResponse(token, user.getEmail(), user.getFullName(),
+                    user.getRole().getName(), menuOptions, user.isMustChangePassword(),
+                    tenant.getSlug(), tenant.getName(), tenant.getPlan().name());
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @Override

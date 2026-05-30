@@ -13,6 +13,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
+import com.stepcore.security.tenant.TenantIdFilterResolver;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,9 +24,19 @@ import java.util.UUID;
 /**
  * A client company using the SaaS platform. Tenants are global (not tenant-scoped):
  * every other tenant-owned entity references a tenant via its {@code tenant_id}.
+ *
+ * <p>Defines the auto-enabled {@code tenantFilter}: Hibernate applies it to every
+ * session and resolves its {@code tenantId} parameter from {@link TenantContext}
+ * via {@link TenantIdFilterResolver}, so tenant-owned entities are transparently
+ * scoped to the current tenant on queries.</p>
  */
 @Entity
 @Table(name = "tenants")
+@FilterDef(
+        name = "tenantFilter",
+        autoEnabled = true,
+        parameters = @ParamDef(name = "tenantId", type = UUID.class, resolver = TenantIdFilterResolver.class)
+)
 @Getter
 @Builder(setterPrefix = "with")
 @NoArgsConstructor

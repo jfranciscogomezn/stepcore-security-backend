@@ -55,7 +55,7 @@ class UserControllerIT extends BaseIntegrationTest {
         final String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new LoginRequest("user_it_admin@example.com", "Admin@1234!"))))
+                                new LoginRequest("legacy", "user_it_admin@example.com", "Admin@1234!"))))
                 .andReturn().getResponse().getContentAsString();
         adminToken = objectMapper.readTree(loginResponse).at("/data/token").asText();
     }

@@ -10,5 +10,8 @@ public record LoginResponse(
         String fullName,
         String roleName,
         List<MenuOptionResponse> menuOptions,
-        boolean mustChangePassword
+        boolean mustChangePassword,
+        String tenantSlug,
+        String tenantName,
+        String tenantPlan
 ) {}

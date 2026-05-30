@@ -123,9 +123,8 @@ class UserServiceTest {
     }
 
     @Test
-    void shouldThrowUserHasAssociatedRecordsWhenDeleting() {
+    void shouldDeleteUserSuccessfully() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRepository.existsByRoleId(any())).thenReturn(false);
 
         userService.delete(1L, "admin@example.com");
 
