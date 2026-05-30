@@ -15,6 +15,7 @@ import com.stepcore.security.exception.TenantSuspendedException;
 import com.stepcore.security.repository.TenantRepository;
 import com.stepcore.security.repository.UserRepository;
 import com.stepcore.security.security.JwtService;
+import com.stepcore.security.tenant.TenantGuc;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +27,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,6 +45,7 @@ class AuthServiceTest {
     @Mock private AuditService auditService;
     @Mock private RoleMapper roleMapper;
     @Mock private UserMapper userMapper;
+    @Mock private TenantGuc tenantGuc;
 
     @InjectMocks private AuthServiceImpl authService;
 
@@ -72,7 +73,7 @@ class AuthServiceTest {
                 .withRole(testRole)
                 .build();
         testTenant = Tenant.builder()
-                .withId(UUID.randomUUID())
+                .withId(2L)
                 .withName("Legacy")
                 .withSlug(TENANT_SLUG)
                 .withPlan(TenantPlan.STANDARD)
@@ -108,7 +109,7 @@ class AuthServiceTest {
     @Test
     void shouldThrowTenantSuspendedWhenTenantIsNotActive() {
         testTenant = Tenant.builder()
-                .withId(UUID.randomUUID()).withName("Legacy").withSlug(TENANT_SLUG)
+                .withId(2L).withName("Legacy").withSlug(TENANT_SLUG)
                 .withPlan(TenantPlan.STANDARD).withStatus(TenantStatus.SUSPENDED).build();
         when(tenantRepository.findBySlug(TENANT_SLUG)).thenReturn(Optional.of(testTenant));
 

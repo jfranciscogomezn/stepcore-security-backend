@@ -17,7 +17,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.stepcore.security.tenant.TenantContext;
 
 import java.io.IOException;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -52,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 // Establish tenant scope from the signed token before loading the user,
                 // so the tenant-aware lookup resolves within the correct tenant.
-                final UUID tenantId = jwtService.extractTenantId(token);
+                final Long tenantId = jwtService.extractTenantId(token);
                 if (tenantId != null) {
                     TenantContext.setTenantId(tenantId);
                 }

@@ -7,10 +7,10 @@
 
 DO $$
 DECLARE
-    legacy_tenant CONSTANT UUID := '00000000-0000-0000-0000-000000000001';
+    legacy_tenant CONSTANT BIGINT := 2;
 BEGIN
     -- roles ----------------------------------------------------------------
-    ALTER TABLE roles ADD COLUMN tenant_id UUID;
+    ALTER TABLE roles ADD COLUMN tenant_id BIGINT;
     UPDATE roles SET tenant_id = legacy_tenant;
     ALTER TABLE roles ALTER COLUMN tenant_id SET NOT NULL;
     ALTER TABLE roles ADD CONSTRAINT fk_roles_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id);
@@ -19,7 +19,7 @@ BEGIN
     CREATE INDEX idx_roles_tenant ON roles(tenant_id);
 
     -- users ----------------------------------------------------------------
-    ALTER TABLE users ADD COLUMN tenant_id UUID;
+    ALTER TABLE users ADD COLUMN tenant_id BIGINT;
     UPDATE users SET tenant_id = legacy_tenant;
     ALTER TABLE users ALTER COLUMN tenant_id SET NOT NULL;
     ALTER TABLE users ADD CONSTRAINT fk_users_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id);
@@ -28,7 +28,7 @@ BEGIN
     CREATE INDEX idx_users_tenant ON users(tenant_id);
 
     -- audit_logs -----------------------------------------------------------
-    ALTER TABLE audit_logs ADD COLUMN tenant_id UUID;
+    ALTER TABLE audit_logs ADD COLUMN tenant_id BIGINT;
     UPDATE audit_logs SET tenant_id = legacy_tenant;
     ALTER TABLE audit_logs ALTER COLUMN tenant_id SET NOT NULL;
     ALTER TABLE audit_logs ADD CONSTRAINT fk_audit_tenant FOREIGN KEY (tenant_id) REFERENCES tenants(id);

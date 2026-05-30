@@ -16,6 +16,7 @@ import com.stepcore.security.repository.TenantRepository;
 import com.stepcore.security.repository.UserRepository;
 import com.stepcore.security.security.JwtService;
 import com.stepcore.security.tenant.TenantContext;
+import com.stepcore.security.tenant.TenantGuc;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -42,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuditService auditService;
     private final RoleMapper roleMapper;
     private final UserMapper userMapper;
+    private final TenantGuc tenantGuc;
 
     @Override
     public LoginResponse login(final LoginRequest request) {
@@ -58,6 +60,9 @@ public class AuthServiceImpl implements AuthService {
         // thread does not leak tenant state back into the pool (login has no JWT yet).
         try {
             TenantContext.setTenantId(tenant.getId());
+            // Re-bind the RLS session variable: the tenant is resolved mid-transaction, after
+            // the aspect already ran with the (empty) inbound context.
+            tenantGuc.bind(tenant.getId());
 
             final User user = userRepository.findByEmail(request.email())
                     .orElseThrow(() -> new BadCredentialsException("Invalid tenant or credentials"));

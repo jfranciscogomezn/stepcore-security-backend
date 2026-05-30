@@ -39,6 +39,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- AOP (tenant RLS GUC binding per transaction) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- Data JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

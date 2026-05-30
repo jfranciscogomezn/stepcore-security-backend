@@ -21,7 +21,6 @@ import org.hibernate.annotations.Filter;
 import com.stepcore.security.tenant.TenantContext;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -37,7 +36,7 @@ public class User {
     private Long id;
 
     @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
+    private Long tenantId;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;

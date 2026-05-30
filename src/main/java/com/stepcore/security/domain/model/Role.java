@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Table(name = "roles")
@@ -42,7 +41,7 @@ public class Role {
     private Long id;
 
     @Column(name = "tenant_id", nullable = false)
-    private UUID tenantId;
+    private Long tenantId;
 
     @Column(nullable = false, length = 100)
     private String name;

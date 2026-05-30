@@ -14,7 +14,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 
 @Service
@@ -47,9 +46,9 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public UUID extractTenantId(final String token) {
+    public Long extractTenantId(final String token) {
         final String raw = extractClaim(token, claims -> claims.get(CLAIM_TENANT_ID, String.class));
-        return raw == null ? null : UUID.fromString(raw);
+        return raw == null ? null : Long.valueOf(raw);
     }
 
     public boolean isTokenValid(final String token, final UserDetails userDetails) {

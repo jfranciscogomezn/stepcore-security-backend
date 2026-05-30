@@ -6,12 +6,17 @@ import com.stepcore.security.controller.dto.user.UserResponse;
 import com.stepcore.security.controller.dto.user.UserStatusRequest;
 import com.stepcore.security.controller.mapper.UserMapper;
 import com.stepcore.security.domain.model.Role;
+import com.stepcore.security.domain.model.Tenant;
 import com.stepcore.security.domain.model.User;
 import com.stepcore.security.exception.DuplicateEmailException;
 import com.stepcore.security.exception.RoleNotFoundException;
+import com.stepcore.security.exception.TenantNotFoundException;
+import com.stepcore.security.exception.UserLimitReachedException;
 import com.stepcore.security.exception.UserNotFoundException;
 import com.stepcore.security.repository.RoleRepository;
+import com.stepcore.security.repository.TenantRepository;
 import com.stepcore.security.repository.UserRepository;
+import com.stepcore.security.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +35,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
     private final UserMapper userMapper;
@@ -55,6 +61,7 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateEmailException(request.email());
         }
+        enforceUserLimit();
         final Role role = roleRepository.findById(request.roleId())
                 .orElseThrow(() -> new RoleNotFoundException(request.roleId()));
 
@@ -115,6 +122,15 @@ public class UserServiceImpl implements UserService {
         auditService.logChange(actorEmail, "SET_USER_STATUS", "USER", String.valueOf(id),
                 String.valueOf(previous), String.valueOf(request.enabled()), null);
         return userMapper.toUserResponse(saved);
+    }
+
+    private void enforceUserLimit() {
+        final Long tenantId = TenantContext.getTenantIdOrDefault();
+        final Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new TenantNotFoundException(tenantId));
+        if (userRepository.countByTenantId(tenantId) >= tenant.getMaxUsers()) {
+            throw new UserLimitReachedException(tenant.getMaxUsers());
+        }
     }
 
     @Override

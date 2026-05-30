@@ -19,7 +19,6 @@ import org.hibernate.annotations.ParamDef;
 import com.stepcore.security.tenant.TenantIdFilterResolver;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * A client company using the SaaS platform. Tenants are global (not tenant-scoped):
@@ -35,7 +34,7 @@ import java.util.UUID;
 @FilterDef(
         name = "tenantFilter",
         autoEnabled = true,
-        parameters = @ParamDef(name = "tenantId", type = UUID.class, resolver = TenantIdFilterResolver.class)
+        parameters = @ParamDef(name = "tenantId", type = Long.class, resolver = TenantIdFilterResolver.class)
 )
 @Getter
 @Builder(setterPrefix = "with")
@@ -44,8 +43,8 @@ import java.util.UUID;
 public class Tenant {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, length = 150)
     private String name;

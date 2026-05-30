@@ -1,8 +1,10 @@
 spring:
   datasource:
+    # Runtime connections use a dedicated, NON-owner role with no BYPASSRLS, so PostgreSQL
+    # Row-Level Security is always enforced on tenant-owned tables (see migration V8).
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:stepcore_security}
-    username: ${DB_USER:gmm_user}
-    password: ${DB_PASSWORD:gmm_pass}
+    username: ${DB_APP_USER:stepcore_app}
+    password: ${DB_APP_PASSWORD:stepcore_app_pass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -14,6 +16,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
     enabled: true
+    # Migrations and seeding run as the table owner (gmm_user), which bypasses RLS.
+    user: ${DB_USER:gmm_user}
+    password: ${DB_PASSWORD:gmm_pass}
     locations: classpath:db/migration
     baseline-on-migrate: false
 

@@ -41,14 +41,16 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
-    @ExceptionHandler({UserNotFoundException.class, RoleNotFoundException.class})
+    @ExceptionHandler({UserNotFoundException.class, RoleNotFoundException.class,
+                        TenantNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(
             final RuntimeException ex, final HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
     @ExceptionHandler({DuplicateEmailException.class, RoleInUseException.class,
-                        UserHasAssociatedRecordsException.class})
+                        UserHasAssociatedRecordsException.class,
+                        TenantSlugAlreadyExistsException.class, UserLimitReachedException.class})
     public ResponseEntity<ErrorResponse> handleConflict(
             final RuntimeException ex, final HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);

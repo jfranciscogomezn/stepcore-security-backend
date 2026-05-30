@@ -1,6 +1,5 @@
 package com.stepcore.security.tenant;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -13,10 +12,10 @@ import java.util.function.Supplier;
  * set (system/seed operations, legacy single-tenant phase) it falls back to the
  * legacy tenant.</p>
  */
-public class TenantIdFilterResolver implements Supplier<UUID> {
+public class TenantIdFilterResolver implements Supplier<Long> {
 
     @Override
-    public UUID get() {
+    public Long get() {
         return TenantContext.getTenantIdOrDefault();
     }
 }
