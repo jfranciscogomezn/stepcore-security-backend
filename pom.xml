@@ -12,11 +12,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.gmm</groupId>
-    <artifactId>gmm-devengos-backend</artifactId>
+    <groupId>com.stepcore</groupId>
+    <artifactId>stepcore-security-backend</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>gmm-devengos-backend</name>
-    <description>GMM Devengos – Payroll time-tracking backend (Spring Boot 3 / Java 17)</description>
+    <name>stepcore-security-backend</name>
+    <description>Stepcore Security – Payroll time-tracking backend (Spring Boot 3 / Java 17)</description>
 
     <properties>
         <java.version>17</java.version>

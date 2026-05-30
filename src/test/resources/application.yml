@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:tc:postgresql:15:///gmm_devengos_test?TC_REUSABLE=true
+    url: jdbc:tc:postgresql:15:///stepcore_security_test?TC_REUSABLE=true
     username: test
     password: test
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
@@ -18,5 +18,5 @@ jwt:
 
 logging:
   level:
-    com.gmm.devengos: DEBUG
+    com.stepcore.security: DEBUG
     org.springframework.security: WARN

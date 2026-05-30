@@ -1,6 +1,6 @@
-# GMM Devengos — Backend API
+# Stepcore Security — Backend API
 
-REST API for the **GMM Devengos** payroll time-tracking and earnings calculation system.  
+REST API for the **Stepcore Security** payroll time-tracking and earnings calculation system.  
 Built with **Java 17 · Spring Boot 3.3 · PostgreSQL 15 · Flyway · JWT**.
 
 ---
@@ -24,7 +24,7 @@ Built with **Java 17 · Spring Boot 3.3 · PostgreSQL 15 · Flyway · JWT**.
 
 ## Overview
 
-GMM Devengos manages employee time records and calculates earnings based on configurable payroll rules.  
+Stepcore Security manages employee time records and calculates earnings based on configurable payroll rules.  
 This backend exposes a versioned REST API (`/api/v1/…`) consumed by the React web frontend and the mobile application.
 
 Current modules implemented in this repository:
@@ -98,8 +98,8 @@ Upcoming modules (planned):
 ```
 src/
 ├── main/
-│   ├── java/com/gmm/devengos/
-│   │   ├── GmmDevengosApplication.java
+│   ├── java/com/stepcore/security/
+│   │   ├── StepcoreSecurityApplication.java
 │   │   ├── common/           # ApiResponse<T> record
 │   │   ├── config/           # SecurityConfig, OpenApiConfig, JwtProperties, DataSeeder
 │   │   ├── controller/
@@ -120,7 +120,7 @@ src/
 │       ├── application.yml
 │       └── db/migration/     # Flyway SQL scripts V1–V4
 └── test/
-    ├── java/com/gmm/devengos/
+    ├── java/com/stepcore/security/
     │   ├── controller/       # AuthControllerIT, RoleControllerIT, UserControllerIT
     │   └── service/          # AuthServiceTest, RoleServiceTest, UserServiceTest, JwtServiceTest
     └── resources/
@@ -145,8 +145,8 @@ src/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/jfranciscogomezn/gmm-devengos-backend.git
-cd gmm-devengos-backend
+git clone https://github.com/jfranciscogomezn/stepcore-security-backend.git
+cd stepcore-security-backend
 ```
 
 ### 2. Configure environment variables (optional)
@@ -171,7 +171,7 @@ Wait until the container is healthy:
 
 ```bash
 docker compose ps
-# Expected: gmm_devengos_db   Up (healthy)
+# Expected: stepcore_security_db   Up (healthy)
 ```
 
 Flyway migrations run automatically on first application startup and create all tables + seed data.
@@ -189,7 +189,7 @@ mvn package -DskipTests
 ### Option A — Run the JAR directly
 
 ```bash
-java -jar target/gmm-devengos-backend-1.0.0-SNAPSHOT.jar
+java -jar target/stepcore-security-backend-1.0.0-SNAPSHOT.jar
 ```
 
 ### Option B — Run via Maven
@@ -216,7 +216,7 @@ mvn spring-boot:run
 
  :: Spring Boot :: (v3.3.5)
  ...
- INFO  --- Started GmmDevengosApplication in X.XXX seconds
+ INFO  --- Started StepcoreSecurityApplication in X.XXX seconds
 ```
 
 The API is ready at **`http://localhost:8080`**.  
@@ -316,7 +316,7 @@ Created automatically by `DataSeeder` on first startup if the admin user does no
 
 | Field | Value |
 |-------|-------|
-| Email | `admin@gmm.com` |
+| Email | `admin@stepcore.com` |
 | Password | `Admin@2026!` |
 | Role | `ADMIN` |
 
@@ -358,7 +358,7 @@ Coverage threshold: **≥ 90%** lines and branches (enforced by the `check` goal
 |----------|---------|-------------|
 | `DB_HOST` | `localhost` | PostgreSQL host |
 | `DB_PORT` | `5432` | PostgreSQL port |
-| `DB_NAME` | `gmm_devengos` | Database name |
+| `DB_NAME` | `stepcore_security` | Database name |
 | `DB_USER` | `gmm_user` | Database username |
 | `DB_PASSWORD` | `gmm_pass` | Database password |
 | `JWT_SECRET` | *(dev default)* | HMAC-SHA256 signing secret (min 32 chars) |
