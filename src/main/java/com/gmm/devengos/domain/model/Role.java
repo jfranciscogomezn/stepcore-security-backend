@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,11 +18,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.gmm.devengos.tenant.TenantContext;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "roles")
@@ -35,7 +39,10 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(length = 255)
@@ -57,6 +64,13 @@ public class Role {
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
     @Builder.Default
     private List<User> users = new ArrayList<>();
+
+    @PrePersist
+    void onCreate() {
+        if (this.tenantId == null) {
+            this.tenantId = TenantContext.getTenantIdOrDefault();
+        }
+    }
 
     public void updateDetails(final String newName, final String newDescription) {
         this.name = newName;
