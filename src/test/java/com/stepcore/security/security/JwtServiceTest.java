@@ -92,4 +92,18 @@ class JwtServiceTest {
         final String token = jwtService.generateToken(userDetails);
         assertThat(jwtService.extractTenantId(token)).isNull();
     }
+
+    @Test
+    void shouldEmbedAndExtractRolesClaim() {
+        final String token = jwtService.generateToken(userDetails, Map.of(
+                JwtService.CLAIM_ROLES, java.util.List.of("ADMIN", "EMPLOYEE")));
+
+        assertThat(jwtService.extractRoles(token)).containsExactly("ADMIN", "EMPLOYEE");
+    }
+
+    @Test
+    void shouldReturnEmptyRolesWhenClaimMissing() {
+        final String token = jwtService.generateToken(userDetails);
+        assertThat(jwtService.extractRoles(token)).isEmpty();
+    }
 }

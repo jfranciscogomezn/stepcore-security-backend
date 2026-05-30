@@ -77,12 +77,13 @@ public class AuthServiceImpl implements AuthService {
                     .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
                     .build();
 
-            final Map<String, Object> tenantClaims = Map.of(
+            final Map<String, Object> claims = Map.of(
                     JwtService.CLAIM_TENANT_ID, tenant.getId().toString(),
                     JwtService.CLAIM_TENANT_SLUG, tenant.getSlug(),
-                    JwtService.CLAIM_TENANT_PLAN, tenant.getPlan().name());
+                    JwtService.CLAIM_TENANT_PLAN, tenant.getPlan().name(),
+                    JwtService.CLAIM_ROLES, List.of(user.getRole().getName()));
 
-            final String token = jwtService.generateToken(userDetails, tenantClaims);
+            final String token = jwtService.generateToken(userDetails, claims);
 
             final List<MenuOptionResponse> menuOptions = user.getRole().getMenuOptions().stream()
                     .sorted(Comparator.comparingInt(opt -> opt.getSortOrder()))
