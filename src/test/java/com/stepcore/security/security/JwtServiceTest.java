@@ -106,4 +106,19 @@ class JwtServiceTest {
         final String token = jwtService.generateToken(userDetails);
         assertThat(jwtService.extractRoles(token)).isEmpty();
     }
+
+    @Test
+    void shouldEmbedAndExtractPermissionsClaim() {
+        final String token = jwtService.generateToken(userDetails, Map.of(
+                JwtService.CLAIM_PERMISSIONS, java.util.List.of("EMPLOYEE_CONFIG", "PAYROLL_CONFIG")));
+
+        assertThat(jwtService.extractPermissions(token))
+                .containsExactly("EMPLOYEE_CONFIG", "PAYROLL_CONFIG");
+    }
+
+    @Test
+    void shouldReturnEmptyPermissionsWhenClaimMissing() {
+        final String token = jwtService.generateToken(userDetails);
+        assertThat(jwtService.extractPermissions(token)).isEmpty();
+    }
 }
