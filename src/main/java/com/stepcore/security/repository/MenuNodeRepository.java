@@ -14,4 +14,8 @@ public interface MenuNodeRepository extends JpaRepository<MenuNode, Long> {
     List<MenuNode> findAllByNodeTypeOrderBySortOrderAsc(MenuNodeType nodeType);
 
     Optional<MenuNode> findByCode(String code);
+
+    boolean existsByCode(String code);
+
+    boolean existsByParentId(Long parentId);
 }

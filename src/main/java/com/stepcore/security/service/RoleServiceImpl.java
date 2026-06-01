@@ -92,7 +92,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     public List<MenuTreeNode> getMenuCatalogue() {
-        return menuTreeService.buildCatalogueTree(menuNodeRepository.findAll());
+        return menuTreeService.buildCatalogueTree(menuNodeRepository.findAll(), false);
     }
 
     @Override

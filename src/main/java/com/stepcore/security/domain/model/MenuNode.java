@@ -58,4 +58,17 @@ public class MenuNode {
     @ManyToMany(mappedBy = "menuNodes")
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    public void updateDetails(
+            final String label,
+            final String route,
+            final String icon,
+            final int sortOrder,
+            final boolean enabled) {
+        this.label = label;
+        this.route = route;
+        this.icon = icon;
+        this.sortOrder = sortOrder;
+        this.enabled = enabled;
+    }
 }

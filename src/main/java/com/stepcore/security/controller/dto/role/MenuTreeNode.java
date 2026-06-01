@@ -11,6 +11,7 @@ public record MenuTreeNode(
         MenuNodeType type,
         String route,
         String icon,
+        boolean enabled,
         List<MenuTreeNode> children
 ) {
     public MenuTreeNode {

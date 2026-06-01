@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({UserNotFoundException.class, RoleNotFoundException.class,
-                        TenantNotFoundException.class})
+                        TenantNotFoundException.class, MenuNodeNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(
             final RuntimeException ex, final HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
@@ -50,13 +50,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({DuplicateEmailException.class, RoleInUseException.class,
                         UserHasAssociatedRecordsException.class,
-                        TenantSlugAlreadyExistsException.class, UserLimitReachedException.class})
+                        TenantSlugAlreadyExistsException.class, UserLimitReachedException.class,
+                        MenuNodeInUseException.class})
     public ResponseEntity<ErrorResponse> handleConflict(
             final RuntimeException ex, final HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    @ExceptionHandler({InvalidPasswordException.class, InvalidMenuNodeAssignmentException.class})
+    @ExceptionHandler({InvalidPasswordException.class, InvalidMenuNodeAssignmentException.class,
+                        MenuNodeValidationException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(
             final RuntimeException ex, final HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);

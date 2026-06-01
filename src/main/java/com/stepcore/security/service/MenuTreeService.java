@@ -52,8 +52,12 @@ public class MenuTreeService {
     }
 
     public List<MenuTreeNode> buildCatalogueTree(final List<MenuNode> catalogue) {
+        return buildCatalogueTree(catalogue, false);
+    }
+
+    public List<MenuTreeNode> buildCatalogueTree(final List<MenuNode> catalogue, final boolean includeDisabled) {
         final Map<Long, MenuNode> byId = catalogue.stream()
-                .filter(MenuNode::isEnabled)
+                .filter(node -> includeDisabled || node.isEnabled())
                 .collect(Collectors.toMap(MenuNode::getId, node -> node, (a, b) -> a, HashMap::new));
         return buildChildren(null, byId);
     }
@@ -87,6 +91,7 @@ public class MenuTreeService {
                 node.getNodeType(),
                 node.getRoute(),
                 node.getIcon(),
+                node.isEnabled(),
                 children);
     }
 }
