@@ -26,6 +26,7 @@ public class JwtService {
     public static final String CLAIM_TENANT_SLUG = "tenant_slug";
     public static final String CLAIM_TENANT_PLAN = "tenant_plan";
     public static final String CLAIM_ROLES = "roles";
+    public static final String CLAIM_PERMISSIONS = "permissions";
 
     private final JwtProperties jwtProperties;
 
@@ -55,7 +56,16 @@ public class JwtService {
 
     @SuppressWarnings("unchecked")
     public List<String> extractRoles(final String token) {
-        final Object raw = extractClaim(token, claims -> claims.get(CLAIM_ROLES));
+        return extractStringListClaim(token, CLAIM_ROLES);
+    }
+
+    public List<String> extractPermissions(final String token) {
+        return extractStringListClaim(token, CLAIM_PERMISSIONS);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> extractStringListClaim(final String token, final String claimName) {
+        final Object raw = extractClaim(token, claims -> claims.get(claimName));
         if (raw == null) {
             return List.of();
         }

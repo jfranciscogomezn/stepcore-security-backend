@@ -77,18 +77,23 @@ public class AuthServiceImpl implements AuthService {
                     .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()))
                     .build();
 
-            final Map<String, Object> claims = Map.of(
-                    JwtService.CLAIM_TENANT_ID, tenant.getId().toString(),
-                    JwtService.CLAIM_TENANT_SLUG, tenant.getSlug(),
-                    JwtService.CLAIM_TENANT_PLAN, tenant.getPlan().name(),
-                    JwtService.CLAIM_ROLES, List.of(user.getRole().getName()));
-
-            final String token = jwtService.generateToken(userDetails, claims);
-
             final List<MenuOptionResponse> menuOptions = user.getRole().getMenuOptions().stream()
                     .sorted(Comparator.comparingInt(opt -> opt.getSortOrder()))
                     .map(roleMapper::toMenuOptionResponse)
                     .toList();
+
+            final List<String> permissions = menuOptions.stream()
+                    .map(MenuOptionResponse::code)
+                    .toList();
+
+            final Map<String, Object> claims = Map.of(
+                    JwtService.CLAIM_TENANT_ID, tenant.getId().toString(),
+                    JwtService.CLAIM_TENANT_SLUG, tenant.getSlug(),
+                    JwtService.CLAIM_TENANT_PLAN, tenant.getPlan().name(),
+                    JwtService.CLAIM_ROLES, List.of(user.getRole().getName()),
+                    JwtService.CLAIM_PERMISSIONS, permissions);
+
+            final String token = jwtService.generateToken(userDetails, claims);
 
             log.info("[AuthServiceImpl] - LOGIN: tenant={} user={} role={}",
                     tenant.getSlug(), user.getEmail(), user.getRole().getName());
