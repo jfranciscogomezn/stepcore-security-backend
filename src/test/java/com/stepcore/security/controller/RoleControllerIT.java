@@ -2,8 +2,11 @@ package com.stepcore.security.controller;
 
 import com.stepcore.security.controller.dto.auth.LoginRequest;
 import com.stepcore.security.controller.dto.role.CreateRoleRequest;
+import com.stepcore.security.controller.dto.role.MenuNodeIdsRequest;
+import com.stepcore.security.domain.model.MenuNode;
 import com.stepcore.security.domain.model.Role;
 import com.stepcore.security.domain.model.User;
+import com.stepcore.security.repository.MenuNodeRepository;
 import com.stepcore.security.repository.RoleRepository;
 import com.stepcore.security.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +21,7 @@ import java.util.HashSet;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,6 +29,7 @@ class RoleControllerIT extends BaseIntegrationTest {
 
     @Autowired private RoleRepository roleRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private MenuNodeRepository menuNodeRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     private String adminToken;
@@ -37,7 +42,7 @@ class RoleControllerIT extends BaseIntegrationTest {
         adminRole = roleRepository.findByName("ADMIN")
                 .orElseGet(() -> roleRepository.save(Role.builder()
                         .withName("ADMIN").withDescription("Admin role")
-                        .withMenuOptions(new HashSet<>()).build()));
+                        .withMenuNodes(new HashSet<>()).build()));
 
         final User admin = userRepository.save(User.builder()
                 .withFirstName("Admin").withLastName("IT")
@@ -83,10 +88,25 @@ class RoleControllerIT extends BaseIntegrationTest {
     }
 
     @Test
+    void shouldRejectModuleMenuNodeAssignment() throws Exception {
+        final MenuNode payrollModule = menuNodeRepository.findByCode("PAYROLL").orElseThrow();
+        final Role customRole = roleRepository.save(Role.builder()
+                .withName("MENU_IT_ROLE").withDescription("Menu assignment test")
+                .withMenuNodes(new HashSet<>()).build());
+
+        mockMvc.perform(put("/api/v1/roles/" + customRole.getId() + "/menu-nodes")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new MenuNodeIdsRequest(java.util.List.of(payrollModule.getId())))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldReturn403WhenNonAdminAccessesRoles() throws Exception {
         final Role employeeRole = roleRepository.save(Role.builder()
                 .withName("EMPLOYEE_IT_TEST").withDescription("Employee")
-                .withMenuOptions(new HashSet<>()).build());
+                .withMenuNodes(new HashSet<>()).build());
 
         userRepository.save(User.builder()
                 .withFirstName("Emp").withLastName("User")

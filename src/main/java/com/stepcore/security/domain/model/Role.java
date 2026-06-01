@@ -55,12 +55,12 @@ public class Role {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "role_menu_options",
+        name = "role_menu_nodes",
         joinColumns = @JoinColumn(name = "role_id"),
-        inverseJoinColumns = @JoinColumn(name = "menu_option_id")
+        inverseJoinColumns = @JoinColumn(name = "menu_node_id")
     )
     @Builder.Default
-    private Set<MenuOption> menuOptions = new HashSet<>();
+    private Set<MenuNode> menuNodes = new HashSet<>();
 
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
     @Builder.Default
@@ -78,8 +78,8 @@ public class Role {
         this.description = newDescription;
     }
 
-    public void replaceMenuOptions(final Set<MenuOption> newOptions) {
-        this.menuOptions.clear();
-        this.menuOptions.addAll(newOptions);
+    public void replaceMenuNodes(final Set<MenuNode> newNodes) {
+        this.menuNodes.clear();
+        this.menuNodes.addAll(newNodes);
     }
 }

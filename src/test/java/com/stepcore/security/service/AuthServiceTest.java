@@ -3,9 +3,9 @@ package com.stepcore.security.service;
 import com.stepcore.security.controller.dto.auth.ChangePasswordRequest;
 import com.stepcore.security.controller.dto.auth.LoginRequest;
 import com.stepcore.security.controller.dto.auth.LoginResponse;
-import com.stepcore.security.controller.mapper.RoleMapper;
 import com.stepcore.security.controller.mapper.UserMapper;
 import com.stepcore.security.domain.model.Role;
+import com.stepcore.security.repository.MenuNodeRepository;
 import com.stepcore.security.domain.model.Tenant;
 import com.stepcore.security.domain.model.TenantPlan;
 import com.stepcore.security.domain.model.TenantStatus;
@@ -26,6 +26,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,10 +41,11 @@ class AuthServiceTest {
 
     @Mock private TenantRepository tenantRepository;
     @Mock private UserRepository userRepository;
+    @Mock private MenuNodeRepository menuNodeRepository;
+    @Mock private MenuTreeService menuTreeService;
     @Mock private JwtService jwtService;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private AuditService auditService;
-    @Mock private RoleMapper roleMapper;
     @Mock private UserMapper userMapper;
     @Mock private TenantGuc tenantGuc;
 
@@ -60,7 +62,7 @@ class AuthServiceTest {
         testRole = Role.builder()
                 .withId(1L)
                 .withName("EMPLOYEE")
-                .withMenuOptions(new HashSet<>())
+                .withMenuNodes(new HashSet<>())
                 .build();
         testUser = User.builder()
                 .withId(1L)
@@ -86,6 +88,9 @@ class AuthServiceTest {
         when(tenantRepository.findBySlug(TENANT_SLUG)).thenReturn(Optional.of(testTenant));
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("Admin@1234!", testUser.getPasswordHash())).thenReturn(true);
+        when(menuNodeRepository.findAll()).thenReturn(List.of());
+        when(menuTreeService.buildTree(any(), any())).thenReturn(List.of());
+        when(menuTreeService.extractPermissions(any())).thenReturn(List.of());
         when(jwtService.generateToken(any(), any())).thenReturn("jwt-token");
 
         final LoginResponse response =

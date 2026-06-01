@@ -58,7 +58,7 @@ class UserServiceTest {
     @BeforeEach
     void setUp() {
         employeeRole = Role.builder()
-                .withId(2L).withName("EMPLOYEE").withMenuOptions(new HashSet<>()).build();
+                .withId(2L).withName("EMPLOYEE").withMenuNodes(new HashSet<>()).build();
         testUser = User.builder()
                 .withId(1L).withFirstName("Ana").withLastName("Garcia")
                 .withEmail("ana@example.com").withPasswordHash("$2a$12$hash")
