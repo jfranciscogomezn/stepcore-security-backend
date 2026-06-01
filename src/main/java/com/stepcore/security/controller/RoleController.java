@@ -2,8 +2,8 @@ package com.stepcore.security.controller;
 
 import com.stepcore.security.common.ApiResponse;
 import com.stepcore.security.controller.dto.role.CreateRoleRequest;
-import com.stepcore.security.controller.dto.role.MenuOptionIdsRequest;
-import com.stepcore.security.controller.dto.role.MenuOptionResponse;
+import com.stepcore.security.controller.dto.role.MenuNodeIdsRequest;
+import com.stepcore.security.controller.dto.role.MenuNodeResponse;
 import com.stepcore.security.controller.dto.role.RoleResponse;
 import com.stepcore.security.controller.dto.role.UpdateRoleRequest;
 import com.stepcore.security.service.RoleService;
@@ -59,15 +59,15 @@ public class RoleController {
         return ResponseEntity.ok(ApiResponse.ok(null, "Role deleted successfully"));
     }
 
-    @GetMapping("/{id}/menu-options")
-    public ResponseEntity<ApiResponse<List<MenuOptionResponse>>> getMenuOptions(@PathVariable final Long id) {
-        return ResponseEntity.ok(ApiResponse.ok(roleService.getMenuOptions(id)));
+    @GetMapping("/{id}/menu-nodes")
+    public ResponseEntity<ApiResponse<List<MenuNodeResponse>>> getAssignedMenuNodes(@PathVariable final Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(roleService.getAssignedMenuNodes(id)));
     }
 
-    @PutMapping("/{id}/menu-options")
-    public ResponseEntity<ApiResponse<RoleResponse>> assignMenuOptions(
+    @PutMapping("/{id}/menu-nodes")
+    public ResponseEntity<ApiResponse<RoleResponse>> assignMenuNodes(
             @PathVariable final Long id,
-            @Valid @RequestBody final MenuOptionIdsRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok(roleService.assignMenuOptions(id, request)));
+            @Valid @RequestBody final MenuNodeIdsRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(roleService.assignMenuNodes(id, request)));
     }
 }

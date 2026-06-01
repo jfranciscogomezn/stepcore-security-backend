@@ -39,11 +39,11 @@ class UserControllerIT extends BaseIntegrationTest {
         adminRole = roleRepository.findByName("ADMIN")
                 .orElseGet(() -> roleRepository.save(Role.builder()
                         .withName("ADMIN").withDescription("Admin")
-                        .withMenuOptions(new HashSet<>()).build()));
+                        .withMenuNodes(new HashSet<>()).build()));
         employeeRole = roleRepository.findByName("EMPLOYEE")
                 .orElseGet(() -> roleRepository.save(Role.builder()
                         .withName("EMPLOYEE").withDescription("Employee")
-                        .withMenuOptions(new HashSet<>()).build()));
+                        .withMenuNodes(new HashSet<>()).build()));
 
         userRepository.save(User.builder()
                 .withFirstName("Admin").withLastName("IT")

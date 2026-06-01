@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
-    @ExceptionHandler({InvalidPasswordException.class})
+    @ExceptionHandler({InvalidPasswordException.class, InvalidMenuNodeAssignmentException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(
             final RuntimeException ex, final HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);

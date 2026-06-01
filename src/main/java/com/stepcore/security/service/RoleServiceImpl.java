@@ -1,17 +1,20 @@
 package com.stepcore.security.service;
 
 import com.stepcore.security.controller.dto.role.CreateRoleRequest;
-import com.stepcore.security.controller.dto.role.MenuOptionIdsRequest;
-import com.stepcore.security.controller.dto.role.MenuOptionResponse;
+import com.stepcore.security.controller.dto.role.MenuNodeIdsRequest;
+import com.stepcore.security.controller.dto.role.MenuNodeResponse;
+import com.stepcore.security.controller.dto.role.MenuTreeNode;
 import com.stepcore.security.controller.dto.role.RoleResponse;
 import com.stepcore.security.controller.dto.role.UpdateRoleRequest;
 import com.stepcore.security.controller.mapper.RoleMapper;
-import com.stepcore.security.domain.model.MenuOption;
+import com.stepcore.security.domain.model.MenuNode;
+import com.stepcore.security.domain.model.MenuNodeType;
 import com.stepcore.security.domain.model.Role;
 import com.stepcore.security.exception.DuplicateEmailException;
+import com.stepcore.security.exception.InvalidMenuNodeAssignmentException;
 import com.stepcore.security.exception.RoleInUseException;
 import com.stepcore.security.exception.RoleNotFoundException;
-import com.stepcore.security.repository.MenuOptionRepository;
+import com.stepcore.security.repository.MenuNodeRepository;
 import com.stepcore.security.repository.RoleRepository;
 import com.stepcore.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +34,8 @@ public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-    private final MenuOptionRepository menuOptionRepository;
+    private final MenuNodeRepository menuNodeRepository;
+    private final MenuTreeService menuTreeService;
     private final RoleMapper roleMapper;
 
     @Override
@@ -59,7 +62,7 @@ public class RoleServiceImpl implements RoleService {
         final Role role = Role.builder()
                 .withName(request.name().toUpperCase())
                 .withDescription(request.description())
-                .withMenuOptions(new HashSet<>())
+                .withMenuNodes(new HashSet<>())
                 .build();
         return roleMapper.toRoleResponse(roleRepository.save(role));
     }
@@ -88,22 +91,31 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MenuOptionResponse> getMenuOptions(final Long id) {
-        final Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RoleNotFoundException(id));
-        return role.getMenuOptions().stream()
-                .sorted(Comparator.comparingInt(MenuOption::getSortOrder))
-                .map(roleMapper::toMenuOptionResponse)
-                .toList();
+    public List<MenuTreeNode> getMenuCatalogue() {
+        return menuTreeService.buildCatalogueTree(menuNodeRepository.findAll());
     }
 
     @Override
-    public RoleResponse assignMenuOptions(final Long id, final MenuOptionIdsRequest request) {
+    @Transactional(readOnly = true)
+    public List<MenuNodeResponse> getAssignedMenuNodes(final Long id) {
         final Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new RoleNotFoundException(id));
-        final Set<MenuOption> options = new HashSet<>(
-                menuOptionRepository.findAllById(request.menuOptionIds()));
-        role.replaceMenuOptions(options);
+        return roleMapper.sortedMenuNodes(role);
+    }
+
+    @Override
+    public RoleResponse assignMenuNodes(final Long id, final MenuNodeIdsRequest request) {
+        final Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new RoleNotFoundException(id));
+        final List<MenuNode> nodes = menuNodeRepository.findAllById(request.menuNodeIds());
+        if (nodes.size() != request.menuNodeIds().size()) {
+            throw new InvalidMenuNodeAssignmentException("One or more menu nodes were not found");
+        }
+        final boolean hasNonItem = nodes.stream().anyMatch(node -> node.getNodeType() != MenuNodeType.ITEM);
+        if (hasNonItem) {
+            throw new InvalidMenuNodeAssignmentException("Only ITEM menu nodes can be assigned to a role");
+        }
+        role.replaceMenuNodes(new HashSet<>(nodes));
         return roleMapper.toRoleResponse(roleRepository.save(role));
     }
 }

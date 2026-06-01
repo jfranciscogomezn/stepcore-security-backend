@@ -1,15 +1,17 @@
 package com.stepcore.security.service;
 
 import com.stepcore.security.controller.dto.role.CreateRoleRequest;
-import com.stepcore.security.controller.dto.role.MenuOptionIdsRequest;
+import com.stepcore.security.controller.dto.role.MenuNodeIdsRequest;
 import com.stepcore.security.controller.dto.role.RoleResponse;
 import com.stepcore.security.controller.dto.role.UpdateRoleRequest;
 import com.stepcore.security.controller.mapper.RoleMapper;
-import com.stepcore.security.domain.model.MenuOption;
+import com.stepcore.security.domain.model.MenuNode;
+import com.stepcore.security.domain.model.MenuNodeType;
 import com.stepcore.security.domain.model.Role;
+import com.stepcore.security.exception.InvalidMenuNodeAssignmentException;
 import com.stepcore.security.exception.RoleInUseException;
 import com.stepcore.security.exception.RoleNotFoundException;
-import com.stepcore.security.repository.MenuOptionRepository;
+import com.stepcore.security.repository.MenuNodeRepository;
 import com.stepcore.security.repository.RoleRepository;
 import com.stepcore.security.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +36,8 @@ class RoleServiceTest {
 
     @Mock private RoleRepository roleRepository;
     @Mock private UserRepository userRepository;
-    @Mock private MenuOptionRepository menuOptionRepository;
+    @Mock private MenuNodeRepository menuNodeRepository;
+    @Mock private MenuTreeService menuTreeService;
     @Mock private RoleMapper roleMapper;
 
     @InjectMocks private RoleServiceImpl roleService;
@@ -47,7 +50,7 @@ class RoleServiceTest {
                 .withId(1L)
                 .withName("ADMIN")
                 .withDescription("Admin role")
-                .withMenuOptions(new HashSet<>())
+                .withMenuNodes(new HashSet<>())
                 .build();
     }
 
@@ -65,7 +68,7 @@ class RoleServiceTest {
     @Test
     void shouldCreateRole() {
         final CreateRoleRequest request = new CreateRoleRequest("NEW_ROLE", "A new role");
-        when(roleRepository.findByName("NEW_ROLE")).thenReturn(java.util.Optional.empty());
+        when(roleRepository.findByName("NEW_ROLE")).thenReturn(Optional.empty());
         when(roleRepository.save(any())).thenReturn(adminRole);
         when(roleMapper.toRoleResponse(any())).thenReturn(new RoleResponse(1L, "NEW_ROLE", "A new role", List.of()));
 
@@ -100,17 +103,29 @@ class RoleServiceTest {
     }
 
     @Test
-    void shouldAssignMenuOptionsToRole() {
-        final MenuOption opt = MenuOption.builder().withId(1L).withCode("MY_PROFILE")
-                .withLabel("Profile").withRoute("/my/profile").withSortOrder(10).build();
+    void shouldAssignItemMenuNodesToRole() {
+        final MenuNode item = MenuNode.builder().withId(1L).withCode("MY_PROFILE")
+                .withLabel("Profile").withRoute("/my/profile").withSortOrder(10)
+                .withNodeType(MenuNodeType.ITEM).build();
         when(roleRepository.findById(1L)).thenReturn(Optional.of(adminRole));
-        when(menuOptionRepository.findAllById(List.of(1L))).thenReturn(List.of(opt));
+        when(menuNodeRepository.findAllById(List.of(1L))).thenReturn(List.of(item));
         when(roleRepository.save(any())).thenReturn(adminRole);
         when(roleMapper.toRoleResponse(any())).thenReturn(new RoleResponse(1L, "ADMIN", null, List.of()));
 
-        roleService.assignMenuOptions(1L, new MenuOptionIdsRequest(List.of(1L)));
+        roleService.assignMenuNodes(1L, new MenuNodeIdsRequest(List.of(1L)));
 
         verify(roleRepository).save(adminRole);
+    }
+
+    @Test
+    void shouldRejectNonItemMenuNodeAssignment() {
+        final MenuNode module = MenuNode.builder().withId(1L).withCode("PAYROLL")
+                .withLabel("Payroll").withSortOrder(10).withNodeType(MenuNodeType.MODULE).build();
+        when(roleRepository.findById(1L)).thenReturn(Optional.of(adminRole));
+        when(menuNodeRepository.findAllById(List.of(1L))).thenReturn(List.of(module));
+
+        assertThatThrownBy(() -> roleService.assignMenuNodes(1L, new MenuNodeIdsRequest(List.of(1L))))
+                .isInstanceOf(InvalidMenuNodeAssignmentException.class);
     }
 
     @Test

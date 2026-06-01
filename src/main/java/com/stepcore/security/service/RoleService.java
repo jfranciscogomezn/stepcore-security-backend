@@ -1,8 +1,9 @@
 package com.stepcore.security.service;
 
 import com.stepcore.security.controller.dto.role.CreateRoleRequest;
-import com.stepcore.security.controller.dto.role.MenuOptionIdsRequest;
-import com.stepcore.security.controller.dto.role.MenuOptionResponse;
+import com.stepcore.security.controller.dto.role.MenuNodeIdsRequest;
+import com.stepcore.security.controller.dto.role.MenuNodeResponse;
+import com.stepcore.security.controller.dto.role.MenuTreeNode;
 import com.stepcore.security.controller.dto.role.RoleResponse;
 import com.stepcore.security.controller.dto.role.UpdateRoleRequest;
 
@@ -14,6 +15,7 @@ public interface RoleService {
     RoleResponse create(CreateRoleRequest request);
     RoleResponse update(Long id, UpdateRoleRequest request);
     void delete(Long id);
-    List<MenuOptionResponse> getMenuOptions(Long id);
-    RoleResponse assignMenuOptions(Long id, MenuOptionIdsRequest request);
+    List<MenuTreeNode> getMenuCatalogue();
+    List<MenuNodeResponse> getAssignedMenuNodes(Long id);
+    RoleResponse assignMenuNodes(Long id, MenuNodeIdsRequest request);
 }

@@ -1,10 +1,11 @@
 package com.stepcore.security.service;
 
-import com.stepcore.security.domain.model.MenuOption;
+import com.stepcore.security.domain.model.MenuNode;
+import com.stepcore.security.domain.model.MenuNodeType;
 import com.stepcore.security.domain.model.Role;
 import com.stepcore.security.domain.model.Tenant;
 import com.stepcore.security.domain.model.User;
-import com.stepcore.security.repository.MenuOptionRepository;
+import com.stepcore.security.repository.MenuNodeRepository;
 import com.stepcore.security.repository.RoleRepository;
 import com.stepcore.security.repository.UserRepository;
 import com.stepcore.security.tenant.TenantContext;
@@ -17,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Seeds the baseline a new tenant needs to operate: an {@code ADMIN} role with full menu
@@ -33,10 +36,11 @@ import java.util.UUID;
 public class TenantProvisioningService {
 
     private static final String TENANT_ADMIN_ROLE = "ADMIN";
+    private static final Set<String> PLATFORM_ONLY_ITEM_CODES = Set.of("PLATFORM_TENANTS");
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-    private final MenuOptionRepository menuOptionRepository;
+    private final MenuNodeRepository menuNodeRepository;
     private final PasswordEncoder passwordEncoder;
     private final TenantGuc tenantGuc;
 
@@ -48,13 +52,17 @@ public class TenantProvisioningService {
         final Long previousTenant = TenantContext.getTenantId();
         try {
             TenantContext.setTenantId(tenant.getId());
-            // Scope RLS to the new tenant so the seeded rows pass the WITH CHECK policy.
             tenantGuc.bind(tenant.getId());
+
+            final Set<MenuNode> tenantMenuItems = menuNodeRepository.findAllByNodeTypeOrderBySortOrderAsc(MenuNodeType.ITEM)
+                    .stream()
+                    .filter(node -> !PLATFORM_ONLY_ITEM_CODES.contains(node.getCode()))
+                    .collect(Collectors.toSet());
 
             final Role adminRole = roleRepository.save(Role.builder()
                     .withName(TENANT_ADMIN_ROLE)
                     .withDescription("Tenant administrator")
-                    .withMenuOptions(new HashSet<>(menuOptionRepository.findAll()))
+                    .withMenuNodes(new HashSet<>(tenantMenuItems))
                     .build());
 
             final String temporaryPassword = generateTemporaryPassword();
