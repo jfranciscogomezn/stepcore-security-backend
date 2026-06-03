@@ -1,6 +1,8 @@
 package com.stepcore.security.exception;
 
+import com.stepcore.security.i18n.ApiMessageService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,10 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final ApiMessageService apiMessageService;
 
     public record ErrorResponse(String timestamp, int status, String error, String message, String path) {}
 
@@ -24,28 +29,28 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
             final AuthenticationException ex, final HttpServletRequest request) {
         log.warn("[GlobalExceptionHandler] - AUTH: {}", ex.getMessage());
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+        return buildResponse(HttpStatus.UNAUTHORIZED, apiMessageService.resolve(ex, ex.getMessage()), request);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
             final AccessDeniedException ex, final HttpServletRequest request) {
         log.warn("[GlobalExceptionHandler] - FORBIDDEN: {}", ex.getMessage());
-        return buildResponse(HttpStatus.FORBIDDEN, "Access denied", request);
+        return buildResponse(HttpStatus.FORBIDDEN, apiMessageService.resolveKey("error.accessDenied"), request);
     }
 
     @ExceptionHandler(TenantSuspendedException.class)
     public ResponseEntity<ErrorResponse> handleTenantSuspended(
             final TenantSuspendedException ex, final HttpServletRequest request) {
         log.warn("[GlobalExceptionHandler] - TENANT_SUSPENDED: {}", ex.getMessage());
-        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+        return buildResponse(HttpStatus.FORBIDDEN, apiMessageService.resolve(ex, ex.getMessage()), request);
     }
 
     @ExceptionHandler({UserNotFoundException.class, RoleNotFoundException.class,
                         TenantNotFoundException.class, MenuNodeNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(
             final RuntimeException ex, final HttpServletRequest request) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+        return buildResponse(HttpStatus.NOT_FOUND, apiMessageService.resolve(ex, ex.getMessage()), request);
     }
 
     @ExceptionHandler({DuplicateEmailException.class, RoleInUseException.class,
@@ -54,14 +59,14 @@ public class GlobalExceptionHandler {
                         MenuNodeInUseException.class})
     public ResponseEntity<ErrorResponse> handleConflict(
             final RuntimeException ex, final HttpServletRequest request) {
-        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+        return buildResponse(HttpStatus.CONFLICT, apiMessageService.resolve(ex, ex.getMessage()), request);
     }
 
     @ExceptionHandler({InvalidPasswordException.class, InvalidMenuNodeAssignmentException.class,
                         MenuNodeValidationException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(
             final RuntimeException ex, final HttpServletRequest request) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+        return buildResponse(HttpStatus.BAD_REQUEST, apiMessageService.resolve(ex, ex.getMessage()), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -70,14 +75,17 @@ public class GlobalExceptionHandler {
         final String details = ex.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining("; "));
-        return buildResponse(HttpStatus.BAD_REQUEST, "Validation failed: " + details, request);
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                apiMessageService.resolveKey("error.validationFailed", details),
+                request);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(
             final Exception ex, final HttpServletRequest request) {
         log.error("[GlobalExceptionHandler] - UNEXPECTED: {}", ex.getMessage(), ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, apiMessageService.resolveKey("error.unexpected"), request);
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(
