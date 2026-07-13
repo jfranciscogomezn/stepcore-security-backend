@@ -1,6 +1,8 @@
 package com.stepcore.security.i18n;
 
+import com.stepcore.security.exception.AdminSelfDisableException;
 import com.stepcore.security.exception.DuplicateEmailException;
+import com.stepcore.security.exception.LastTenantAdminException;
 import com.stepcore.security.exception.InvalidMenuNodeAssignmentException;
 import com.stepcore.security.exception.InvalidPasswordException;
 import com.stepcore.security.exception.MenuNodeInUseException;
@@ -76,6 +78,12 @@ public class ApiMessageService {
         }
         if (throwable instanceof TenantSlugAlreadyExistsException ex) {
             return get("error.tenantSlugExists", ex.getMessage().replace("Tenant slug already exists: ", ""));
+        }
+        if (throwable instanceof AdminSelfDisableException) {
+            return get("error.adminSelfDisable");
+        }
+        if (throwable instanceof LastTenantAdminException) {
+            return get("error.lastTenantAdmin");
         }
         if (throwable instanceof InvalidPasswordException) {
             return get("error.currentPasswordIncorrect");
