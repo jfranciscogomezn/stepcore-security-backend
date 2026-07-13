@@ -9,7 +9,9 @@ import com.stepcore.security.domain.model.Role;
 import com.stepcore.security.domain.model.Tenant;
 import com.stepcore.security.domain.model.TenantPlan;
 import com.stepcore.security.domain.model.User;
+import com.stepcore.security.exception.AdminSelfDisableException;
 import com.stepcore.security.exception.DuplicateEmailException;
+import com.stepcore.security.exception.LastTenantAdminException;
 import com.stepcore.security.exception.RoleNotFoundException;
 import com.stepcore.security.exception.UserHasAssociatedRecordsException;
 import com.stepcore.security.exception.UserLimitReachedException;
@@ -135,6 +137,52 @@ class UserServiceTest {
 
         verify(userRepository).save(testUser);
         verify(auditService).logChange(anyString(), anyString(), anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    void shouldThrowAdminSelfDisableWhenAdminTriesToDisableThemselves() {
+        // testUser has email "ana@example.com" — actor is also "ana@example.com"
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+        assertThatThrownBy(() -> userService.setStatus(1L, new UserStatusRequest(false), "ana@example.com"))
+                .isInstanceOf(AdminSelfDisableException.class);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowLastTenantAdminWhenDisablingOnlyActiveAdmin() {
+        final Role adminRole = Role.builder()
+                .withId(1L).withName("ADMIN").withMenuNodes(new HashSet<>()).build();
+        final User adminUser = User.builder()
+                .withId(2L).withFirstName("Carlos").withLastName("Admin")
+                .withEmail("admin@example.com").withPasswordHash("$2a$12$hash")
+                .withEnabled(true).withMustChangePassword(false).withRole(adminRole).build();
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(adminUser));
+        when(userRepository.countActiveAdminsExcluding(adminUser.getTenantId(), 2L)).thenReturn(0L);
+
+        assertThatThrownBy(() -> userService.setStatus(2L, new UserStatusRequest(false), "other@example.com"))
+                .isInstanceOf(LastTenantAdminException.class);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldAllowDisablingAdminWhenOtherActiveAdminExists() {
+        final Role adminRole = Role.builder()
+                .withId(1L).withName("ADMIN").withMenuNodes(new HashSet<>()).build();
+        final User adminUser = User.builder()
+                .withId(2L).withFirstName("Carlos").withLastName("Admin")
+                .withEmail("admin@example.com").withPasswordHash("$2a$12$hash")
+                .withEnabled(true).withMustChangePassword(false).withRole(adminRole).build();
+
+        when(userRepository.findById(2L)).thenReturn(Optional.of(adminUser));
+        when(userRepository.countActiveAdminsExcluding(adminUser.getTenantId(), 2L)).thenReturn(1L);
+        when(userRepository.save(adminUser)).thenReturn(adminUser);
+        when(userMapper.toUserResponse(adminUser)).thenReturn(testUserResponse);
+
+        userService.setStatus(2L, new UserStatusRequest(false), "other@example.com");
+
+        verify(userRepository).save(adminUser);
     }
 
     @Test

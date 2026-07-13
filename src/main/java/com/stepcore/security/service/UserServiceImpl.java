@@ -8,7 +8,9 @@ import com.stepcore.security.controller.mapper.UserMapper;
 import com.stepcore.security.domain.model.Role;
 import com.stepcore.security.domain.model.Tenant;
 import com.stepcore.security.domain.model.User;
+import com.stepcore.security.exception.AdminSelfDisableException;
 import com.stepcore.security.exception.DuplicateEmailException;
+import com.stepcore.security.exception.LastTenantAdminException;
 import com.stepcore.security.exception.RoleNotFoundException;
 import com.stepcore.security.exception.TenantNotFoundException;
 import com.stepcore.security.exception.UserLimitReachedException;
@@ -116,6 +118,22 @@ public class UserServiceImpl implements UserService {
     public UserResponse setStatus(final Long id, final UserStatusRequest request, final String actorEmail) {
         final User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+
+        if (!request.enabled()) {
+            // Capa 1: block self-disable
+            if (user.getEmail().equals(actorEmail)) {
+                throw new AdminSelfDisableException();
+            }
+            // Capa 2: block disabling the last active admin of the tenant
+            if ("ADMIN".equals(user.getRole().getName())) {
+                final long remaining = userRepository.countActiveAdminsExcluding(
+                        user.getTenantId(), user.getId());
+                if (remaining == 0) {
+                    throw new LastTenantAdminException();
+                }
+            }
+        }
+
         final boolean previous = user.isEnabled();
         user.setEnabled(request.enabled());
         final User saved = userRepository.save(user);
