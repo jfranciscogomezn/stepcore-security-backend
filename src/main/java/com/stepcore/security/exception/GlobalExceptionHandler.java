@@ -56,7 +56,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({DuplicateEmailException.class, RoleInUseException.class,
                         UserHasAssociatedRecordsException.class,
                         TenantSlugAlreadyExistsException.class, UserLimitReachedException.class,
-                        MenuNodeInUseException.class})
+                        MenuNodeInUseException.class,
+                        AdminSelfDisableException.class, AdminSelfDeleteException.class,
+                        LastTenantAdminException.class})
     public ResponseEntity<ErrorResponse> handleConflict(
             final RuntimeException ex, final HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, apiMessageService.resolve(ex, ex.getMessage()), request);

@@ -19,6 +19,7 @@ import com.stepcore.security.repository.RoleRepository;
 import com.stepcore.security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,7 +93,10 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     public List<MenuTreeNode> getMenuCatalogue() {
-        return menuTreeService.buildCatalogueTree(menuNodeRepository.findAll(), false);
+        final List<MenuNode> catalogue = currentUserIsPlatformAdmin()
+                ? menuNodeRepository.findAll()
+                : menuNodeRepository.findByPlatformOnlyFalse();
+        return menuTreeService.buildCatalogueTree(catalogue, false);
     }
 
     @Override
@@ -115,7 +119,19 @@ public class RoleServiceImpl implements RoleService {
         if (hasNonItem) {
             throw new InvalidMenuNodeAssignmentException("Only ITEM menu nodes can be assigned to a role");
         }
+        if (!currentUserIsPlatformAdmin() && nodes.stream().anyMatch(MenuNode::isPlatformOnly)) {
+            throw new InvalidMenuNodeAssignmentException("Platform-only menu nodes cannot be assigned to tenant roles");
+        }
         role.replaceMenuNodes(new HashSet<>(nodes));
         return roleMapper.toRoleResponse(roleRepository.save(role));
+    }
+
+    private static boolean currentUserIsPlatformAdmin() {
+        final var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return false;
+        }
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_PLATFORM_ADMIN".equals(a.getAuthority()));
     }
 }

@@ -55,6 +55,10 @@ public class MenuNode {
     @Builder.Default
     private boolean enabled = true;
 
+    @Column(name = "platform_only", nullable = false)
+    @Builder.Default
+    private boolean platformOnly = false;
+
     @ManyToMany(mappedBy = "menuNodes")
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
