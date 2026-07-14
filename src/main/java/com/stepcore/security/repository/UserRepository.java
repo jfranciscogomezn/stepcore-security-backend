@@ -60,6 +60,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<Object[]> findUsersByTenantNative(@Param("tenantId") Long tenantId);
 
     /**
+     * Return the email of a user by id and tenant, bypassing RLS.
+     * Used by PlatformUserService to check self-disable before updating.
+     */
+    @Query(value = "SELECT email FROM users WHERE id = :userId AND tenant_id = :tenantId",
+           nativeQuery = true)
+    Optional<String> findEmailByIdAndTenantId(@Param("userId") Long userId,
+                                              @Param("tenantId") Long tenantId);
+
+    /**
      * Update the enabled flag of a specific user within a tenant.
      * Native query — allows platform admin to operate cross-tenant.
      * Returns the number of rows updated (0 = user not found in that tenant).

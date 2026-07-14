@@ -8,6 +8,7 @@ import com.stepcore.security.controller.mapper.UserMapper;
 import com.stepcore.security.domain.model.Role;
 import com.stepcore.security.domain.model.Tenant;
 import com.stepcore.security.domain.model.User;
+import com.stepcore.security.exception.AdminSelfDeleteException;
 import com.stepcore.security.exception.AdminSelfDisableException;
 import com.stepcore.security.exception.DuplicateEmailException;
 import com.stepcore.security.exception.LastTenantAdminException;
@@ -108,6 +109,9 @@ public class UserServiceImpl implements UserService {
     public void delete(final Long id, final String actorEmail) {
         final User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+        if (user.getEmail().equals(actorEmail)) {
+            throw new AdminSelfDeleteException();
+        }
         userRepository.delete(user);
         auditService.logChange(actorEmail, "DELETE_USER", "USER", String.valueOf(id),
                 user.getEmail(), null, "User account deleted");

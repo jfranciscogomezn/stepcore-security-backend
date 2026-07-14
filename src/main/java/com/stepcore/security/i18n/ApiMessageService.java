@@ -1,5 +1,6 @@
 package com.stepcore.security.i18n;
 
+import com.stepcore.security.exception.AdminSelfDeleteException;
 import com.stepcore.security.exception.AdminSelfDisableException;
 import com.stepcore.security.exception.DuplicateEmailException;
 import com.stepcore.security.exception.LastTenantAdminException;
@@ -81,6 +82,9 @@ public class ApiMessageService {
         }
         if (throwable instanceof AdminSelfDisableException) {
             return get("error.adminSelfDisable");
+        }
+        if (throwable instanceof AdminSelfDeleteException) {
+            return get("error.adminSelfDelete");
         }
         if (throwable instanceof LastTenantAdminException) {
             return get("error.lastTenantAdmin");

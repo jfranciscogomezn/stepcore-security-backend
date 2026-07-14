@@ -13,6 +13,9 @@ public interface MenuNodeRepository extends JpaRepository<MenuNode, Long> {
 
     List<MenuNode> findAllByNodeTypeOrderBySortOrderAsc(MenuNodeType nodeType);
 
+    /** Returns all nodes that are NOT platform-only; used for tenant-admin catalogue. */
+    List<MenuNode> findByPlatformOnlyFalse();
+
     Optional<MenuNode> findByCode(String code);
 
     boolean existsByCode(String code);

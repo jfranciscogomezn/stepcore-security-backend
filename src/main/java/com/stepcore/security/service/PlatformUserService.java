@@ -2,6 +2,7 @@ package com.stepcore.security.service;
 
 import com.stepcore.security.controller.dto.platform.PlatformUserResponse;
 import com.stepcore.security.controller.dto.user.UserStatusRequest;
+import com.stepcore.security.exception.AdminSelfDisableException;
 import com.stepcore.security.exception.TenantNotFoundException;
 import com.stepcore.security.exception.UserNotFoundException;
 import com.stepcore.security.repository.TenantRepository;
@@ -40,6 +41,11 @@ public class PlatformUserService {
                                           final UserStatusRequest request,
                                           final String actorEmail) {
         assertTenantExists(tenantId);
+        if (!request.enabled()) {
+            userRepository.findEmailByIdAndTenantId(userId, tenantId)
+                    .filter(email -> email.equals(actorEmail))
+                    .ifPresent(ignored -> { throw new AdminSelfDisableException(); });
+        }
         final int updated = userRepository.setEnabledByIdAndTenantId(
                 userId, tenantId, request.enabled());
         if (updated == 0) {
